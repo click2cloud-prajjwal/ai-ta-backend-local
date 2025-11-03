@@ -1,0 +1,2663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>UIUC.CHAT API Documentation</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 2cm;
+            @top-center {
+                content: "UIUC.CHAT API Documentation";
+                font-family: Arial, sans-serif;
+                font-size: 10pt;
+                color: #666;
+            }
+            @bottom-right {
+                content: "Page " counter(page) " of " counter(pages);
+                font-family: Arial, sans-serif;
+                font-size: 9pt;
+                color: #666;
+            }
+        }
+        
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+        }
+        
+        h1 {
+            color: #2563eb;
+            font-size: 28pt;
+            margin-top: 0;
+            page-break-before: always;
+        }
+        
+        h1:first-of-type {
+            page-break-before: avoid;
+        }
+        
+        h2 {
+            color: #1e40af;
+            font-size: 20pt;
+            margin-top: 30px;
+            border-bottom: 2px solid #3b82f6;
+            padding-bottom: 5px;
+        }
+        
+        h3 {
+            color: #1e3a8a;
+            font-size: 16pt;
+            margin-top: 20px;
+        }
+        
+        h4 {
+            color: #1e293b;
+            font-size: 13pt;
+            margin-top: 15px;
+        }
+        
+        code {
+            background-color: #f1f5f9;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 11pt;
+        }
+        
+        pre {
+            background-color: #1e293b;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 10pt;
+            page-break-inside: avoid;
+        }
+        
+        pre code {
+            background: none;
+            padding: 0;
+            color: inherit;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            page-break-inside: avoid;
+        }
+        
+        th {
+            background-color: #3b82f6;
+            color: white;
+            padding: 10px;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        td {
+            padding: 8px 10px;
+            border: 1px solid #e5e7eb;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f9fafb;
+        }
+        
+        .endpoint {
+            background-color: #eff6ff;
+            padding: 20px;
+            border-left: 4px solid #3b82f6;
+            margin: 20px 0;
+            page-break-inside: avoid;
+        }
+        
+        .method-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-weight: 600;
+            font-size: 10pt;
+            margin-right: 10px;
+        }
+        
+        .method-post {
+            background-color: #10b981;
+            color: white;
+        }
+        
+        .method-get {
+            background-color: #3b82f6;
+            color: white;
+        }
+        
+        .method-delete {
+            background-color: #ef4444;
+            color: white;
+        }
+        
+        .toc {
+            page-break-after: always;
+        }
+        
+        .toc ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .toc li {
+            margin: 5px 0;
+        }
+        
+        .toc a {
+            color: #2563eb;
+            text-decoration: none;
+        }
+        
+        .note {
+            background-color: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 10px 15px;
+            margin: 15px 0;
+            page-break-inside: avoid;
+        }
+        
+        .success {
+            background-color: #d1fae5;
+            border-left: 4px solid #10b981;
+            padding: 10px 15px;
+            margin: 15px 0;
+            page-break-inside: avoid;
+        }
+        
+        .warning {
+            background-color: #fee2e2;
+            border-left: 4px solid #ef4444;
+            padding: 10px 15px;
+            margin: 15px 0;
+            page-break-inside: avoid;
+        }
+        
+        .flow-diagram {
+            background-color: #f8fafc;
+            border: 1px solid #cbd5e1;
+            padding: 15px;
+            margin: 20px 0;
+            font-family: monospace;
+            font-size: 10pt;
+            page-break-inside: avoid;
+        }
+    </style>
+</head>
+<body>
+
+
+
+<!-- ============================================ -->
+<!-- SECTION 1: CORE RAG PIPELINE -->
+<!-- ============================================ -->
+
+<h1 id="core-rag">1. Core RAG Pipeline</h1>
+
+<p>The Core RAG (Retrieval-Augmented Generation) pipeline consists of three essential steps that enable intelligent question-answering using course materials:</p>
+
+<ol>
+    <li><strong>Ingestion:</strong> Upload and process documents into searchable vectors</li>
+    <li><strong>Retrieval:</strong> Search for semantically relevant content chunks</li>
+    <li><strong>Generation:</strong> Create AI-powered responses using retrieved context</li>
+</ol>
+
+<div class="flow-diagram">
+User Question → Retrieve Context → Generate Answer
+     ↓                ↓                    ↓
+  (Query)      (ChromaDB Search)     (GPT-4.1-mini)
+</div>
+
+<!-- POST /ingest -->
+<h2 id="ingest">1.1 Document Ingestion</h2>
+
+<div class="endpoint">
+    <h3><span class="method-badge method-post">POST</span>/ingest</h3>
+    
+    <p><strong>Purpose:</strong> Upload and process documents (PDFs, URLs, files) for semantic search</p>
+    
+    <p><strong>Use Cases:</strong></p>
+    <ul>
+        <li>Professor uploads lecture slides and course materials</li>
+        <li>Student adds supplementary resources</li>
+        <li>Admin imports institutional content</li>
+        <li>Automated content updates via webhooks</li>
+    </ul>
+</div>
+
+<h4>Request Format</h4>
+
+<p><strong>Option A: File Upload (multipart/form-data)</strong></p>
+
+<pre><code>POST /ingest
+Content-Type: multipart/form-data
+
+course_name: CS101
+file: lecture_01.pdf
+readable_filename: Introduction to Programming</code></pre>
+
+<p><strong>Option B: URL-based (application/json)</strong></p>
+
+<pre><code>POST /ingest
+Content-Type: application/json
+
+{
+  "course_name": "CS101",
+  "url": "https://example.com/lecture.pdf",
+  "readable_filename": "Introduction to Programming",
+  "base_url": "https://example.com"
+}</code></pre>
+
+<h4>Parameters</h4>
+
+<table>
+    <thead>
+        <tr>
+            <th>Parameter</th>
+            <th>Type</th>
+            <th>Required</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>course_name</code></td>
+            <td>string</td>
+            <td>✅ Yes</td>
+            <td>Unique course identifier (e.g., CS101, BIOL202)</td>
+        </tr>
+        <tr>
+            <td><code>file</code></td>
+            <td>file</td>
+            <td>✅*</td>
+            <td>Document file for file upload method</td>
+        </tr>
+        <tr>
+            <td><code>url</code></td>
+            <td>string</td>
+            <td>✅*</td>
+            <td>Document URL for URL-based ingestion</td>
+        </tr>
+        <tr>
+            <td><code>readable_filename</code></td>
+            <td>string</td>
+            <td>❌ No</td>
+            <td>Display name for document (defaults to filename)</td>
+        </tr>
+        <tr>
+            <td><code>base_url</code></td>
+            <td>string</td>
+            <td>❌ No</td>
+            <td>Base URL for resolving relative links in HTML docs</td>
+        </tr>
+    </tbody>
+</table>
+
+<p style="font-size: 9pt; color: #64748b;">* Either <code>file</code> or <code>url</code> must be provided</p>
+
+<h4>Response</h4>
+
+<pre><code>{
+  "outcome": "Queued Ingest task",
+  "task_id": "abc-123-def-456",
+  "success": true
+}</code></pre>
+
+<h4>Processing Flow</h4>
+
+<div class="note">
+    <strong>⏱️ Asynchronous Processing:</strong> The endpoint returns immediately (≈200ms). Background worker processes the document in 30-60 seconds. Use <code>task_id</code> for status tracking.
+</div>
+
+<ol>
+    <li><strong>API Layer:</strong> Receives file/URL and validates parameters</li>
+    <li><strong>Storage:</strong> Saves to temporary location or downloads from URL</li>
+    <li><strong>Queue:</strong> Creates task in RabbitMQ with metadata</li>
+    <li><strong>Immediate Response:</strong> Returns task ID to client</li>
+    <li><strong>Worker Processing (Background):</strong>
+        <ul>
+            <li>Downloads file if URL provided</li>
+            <li>Detects file type and selects appropriate parser</li>
+            <li>Extracts text content (with OCR fallback for images)</li>
+            <li>Chunks text: 1000 characters per chunk, 200 character overlap</li>
+            <li>Generates embeddings using Azure OpenAI (text-embedding-3-small)</li>
+            <li>Stores vectors in ChromaDB with metadata</li>
+            <li>Uploads original file to Azure Blob Storage</li>
+            <li>Updates document registry in MS SQL Server</li>
+        </ul>
+    </li>
+    <li><strong>Completion:</strong> Optional email notification sent</li>
+</ol>
+
+<h4>Performance Metrics</h4>
+
+<table>
+    <thead>
+        <tr>
+            <th>Stage</th>
+            <th>Average Time</th>
+            <th>Notes</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>API Response</td>
+            <td>200ms</td>
+            <td>Immediate return with task ID</td>
+        </tr>
+        <tr>
+            <td>File Download (if URL)</td>
+            <td>3-5s</td>
+            <td>Depends on file size and network</td>
+        </tr>
+        <tr>
+            <td>Text Extraction</td>
+            <td>2-5s</td>
+            <td>Varies by file type (PDF slower than TXT)</td>
+        </tr>
+        <tr>
+            <td>Text Chunking</td>
+            <td>1s</td>
+            <td>Fast for all document sizes</td>
+        </tr>
+        <tr>
+            <td>Embedding Generation</td>
+            <td>10-20s</td>
+            <td>Depends on chunk count (15-30 chunks typical)</td>
+        </tr>
+        <tr>
+            <td>ChromaDB Upload</td>
+            <td>2-5s</td>
+            <td>Batch upload of all chunks</td>
+        </tr>
+        <tr>
+            <td>Azure Blob Upload</td>
+            <td>2-4s</td>
+            <td>Original file backup</td>
+        </tr>
+        <tr>
+            <td><strong>Total Processing</strong></td>
+            <td><strong>30-60s</strong></td>
+            <td><strong>For typical 10-page PDF</strong></td>
+        </tr>
+    </tbody>
+</table>
+
+<h4>Supported File Formats</h4>
+
+<table>
+    <thead>
+        <tr>
+            <th>Format Category</th>
+            <th>Extensions</th>
+            <th>Processing Method</th>
+            <th>Special Features</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Plain Text</td>
+            <td>.txt, .md, .py, .js, .java, .cpp</td>
+            <td>Direct UTF-8 reading</td>
+            <td>Syntax highlighting preserved in metadata</td>
+        </tr>
+        <tr>
+            <td>PDF Documents</td>
+            <td>.pdf</td>
+            <td>PyPDF → pdfplumber → OCR fallback</td>
+            <td>Page numbers extracted, images OCR'd if text layer missing</td>
+        </tr>
+        <tr>
+            <td>Office Documents</td>
+            <td>.docx, .doc</td>
+            <td>python-docx / textract</td>
+            <td>Headers, footers, and formatting preserved</td>
+        </tr>
+        <tr>
+            <td>Presentations</td>
+            <td>.pptx, .ppt</td>
+            <td>python-pptx</td>
+            <td>Slide numbers and speaker notes included</td>
+        </tr>
+        <tr>
+            <td>Spreadsheets</td>
+            <td>.xlsx, .xls, .csv</td>
+            <td>pandas / openpyxl</td>
+            <td>Table structure preserved, formulas evaluated</td>
+        </tr>
+        <tr>
+            <td>Images</td>
+            <td>.png, .jpg, .jpeg, .gif</td>
+            <td>Tesseract OCR</td>
+            <td>Handwriting detection, multi-language support</td>
+        </tr>
+        <tr>
+            <td>Video</td>
+            <td>.mp4, .avi, .mov, .mkv</td>
+            <td>FFmpeg audio extraction → Whisper</td>
+            <td>Automatic transcription with timestamps</td>
+        </tr>
+        <tr>
+            <td>Audio</td>
+            <td>.mp3, .wav, .m4a, .ogg</td>
+            <td>Whisper transcription</td>
+            <td>Speaker diarization if multiple speakers</td>
+        </tr>
+        <tr>
+            <td>Web Content</td>
+            <td>.html, .htm</td>
+            <td>BeautifulSoup</td>
+            <td>JavaScript rendered, images extracted</td>
+        </tr>
+    </tbody>
+</table>
+
+<h4>Error Responses</h4>
+
+<pre><code>// 400 Bad Request - Missing required parameter
+{
+  "error": "course_name is required",
+  "code": "MISSING_PARAMS"
+}
+
+// 400 Bad Request - Invalid file
+{
+  "error": "Empty filename",
+  "code": "INVALID_FILE"
+}
+
+// 500 Internal Server Error - Processing failure
+{
+  "error": "Failed to queue ingestion",
+  "outcome": "Failed",
+  "task_id": "abc-123",
+  "details": "RabbitMQ connection timeout"
+}</code></pre>
+
+<h4>Best Practices</h4>
+
+<div class="success">
+    <strong>✅ DO:</strong>
+    <ul>
+        <li>Use descriptive <code>readable_filename</code> values for better search results</li>
+        <li>Batch multiple files when possible to reduce API calls</li>
+        <li>Verify file size < 100MB before upload (split larger files)</li>
+        <li>Use Canvas import for bulk LMS content instead of individual uploads</li>
+    </ul>
+</div>
+
+<div class="warning">
+    <strong>❌ DON'T:</strong>
+    <ul>
+        <li>Upload duplicate content (wastes embedding credits)</li>
+        <li>Use special characters or spaces in course_name</li>
+        <li>Expect immediate searchability (wait 30-60s for processing)</li>
+        <li>Upload scanned PDFs without OCR preprocessing (degrades quality)</li>
+    </ul>
+</div>
+
+<!-- POST /getTopContexts -->
+<h2 id="getTopContexts">1.2 Context Retrieval</h2>
+
+<div class="endpoint">
+    <h3><span class="method-badge method-post">POST</span>/getTopContexts</h3>
+    
+    <p><strong>Purpose:</strong> Search for semantically relevant document chunks using vector similarity</p>
+    
+    <p><strong>Use Cases:</strong></p>
+    <ul>
+        <li>Find relevant content for student questions before generating AI response</li>
+        <li>Research assistant functionality - explore similar topics</li>
+        <li>Pre-flight check before chatbot response to ensure relevant context exists</li>
+        <li>Manual context verification for quality assurance</li>
+    </ul>
+</div>
+
+<h4>Request Format</h4>
+
+<pre><code>POST /getTopContexts
+Content-Type: application/json
+
+{
+  "search_query": "What is polymorphism in object-oriented programming?",
+  "course_name": "CS101",
+  "top_n": 5,
+  "doc_groups": ["lectures", "readings"],
+  "conversation_id": ""
+}</code></pre>
+
+<h4>Parameters</h4>
+
+<table>
+    <thead>
+        <tr>
+            <th>Parameter</th>
+            <th>Type</th>
+            <th>Required</th>
+            <th>Default</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>search_query</code></td>
+            <td>string</td>
+            <td>✅ Yes</td>
+            <td>-</td>
+            <td>Natural language question or search phrase</td>
+        </tr>
+        <tr>
+            <td><code>course_name</code></td>
+            <td>string</td>
+            <td>✅ Yes</td>
+            <td>-</td>
+            <td>Course identifier to search within</td>
+        </tr>
+        <tr>
+            <td><code>top_n</code></td>
+            <td>integer</td>
+            <td>❌ No</td>
+            <td>5</td>
+            <td>Number of results to return (1-100)</td>
+        </tr>
+        <tr>
+            <td><code>doc_groups</code></td>
+            <td>array[string]</td>
+            <td>❌ No</td>
+            <td>[]</td>
+            <td>Filter by document categories/tags</td>
+        </tr>
+        <tr>
+            <td><code>conversation_id</code></td>
+            <td>string</td>
+            <td>❌ No</td>
+            <td>""</td>
+            <td>Filter to conversation-specific uploaded docs</td>
+        </tr>
+    </tbody>
+</table>
+
+<h4>Response</h4>
+
+<pre><code>[
+  {
+    "text": "Polymorphism is one of the four fundamental principles of object-oriented programming (OOP). It allows objects of different classes to be treated as objects of a common superclass. The term comes from Greek meaning 'many forms'...",
+    "page_content": "Polymorphism is one of the four fundamental principles...",
+    "readable_filename": "Lecture_03_OOP_Concepts.pdf",
+    "course_name": "CS101",
+    "pagenumber": "12",
+    "url": "https://courses.example.edu/cs101/lecture03.pdf",
+    "s3_path": "CS101/documents/uuid-abc-123.pdf",
+    "score": 0.8947,
+    "base_url": "https://courses.example.edu",
+    "doc_groups": ["lectures", "week3"]
+  },
+  {
+    "text": "There are two main types of polymorphism in Java: compile-time (method overloading) and runtime (method overriding). Compile-time polymorphism is resolved during compilation...",
+    "readable_filename": "Java_OOP_Guide.pdf",
+    "pagenumber": "45",
+    "score": 0.8523,
+    "doc_groups": ["textbook"]
+  },
+  {
+    "text": "Example of polymorphism in Python:\n\nclass Animal:\n    def sound(self):\n        pass\n\nclass Dog(Animal):\n    def sound(self):\n        return 'Woof!'\n\nclass Cat(Animal):\n    def sound(self):\n        return 'Meow!'",
+    "readable_filename": "Python_Examples.py",
+    "score": 0.8201,
+    "doc_groups": ["code_examples"]
+  }
+]</code></pre>
+
+<h4>Response Fields</h4>
+
+<table>
+    <thead>
+        <tr>
+            <th>Field</th>
+            <th>Type</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>text</code></td>
+            <td>string</td>
+            <td>The actual content chunk (typically 800-1200 characters)</td>
+        </tr>
+        <tr>
+            <td><code>page_content</code></td>
+            <td>string</td>
+            <td>Duplicate of text field for LangChain compatibility</td>
+        </tr>
+        <tr>
+            <td><code>readable_filename</code></td>
+            <td>string</td>
+            <td>Human-friendly document name</td>
+        </tr>
+        <tr>
+            <td><code>pagenumber</code></td>
+            <td>string</td>
+            <td>Page number in source document (if applicable)</td>
+        </tr>
+        <tr>
+            <td><code>score</code></td>
+            <td>float</td>
+            <td>Cosine similarity score (0-1, higher = more relevant)</td>
+        </tr>
+        <tr>
+            <td><code>url</code></td>
+            <td>string</td>
+            <td>Original source URL (if ingested via URL)</td>
+        </tr>
+        <tr>
+            <td><code>s3_path</code></td>
+            <td>string</td>
+            <td>Azure Blob Storage path for original file</td>
+        </tr>
+    </tbody>
+</table>
+
+<h4>Processing Flow</h4>
+
+<ol>
+    <li><strong>Query Reception:</strong> API receives search query and parameters</li>
+    <li><strong>Query Embedding:</strong>
+        <ul>
+            <li>Sends query to Azure OpenAI (text-embedding-3-small)</li>
+            <li>Receives 1536-dimensional vector representation</li>
+            <li>Takes ~1.2 seconds</li>
+        </ul>
+    </li>
+    <li><strong>Vector Search:</strong>
+        <ul>
+            <li>Queries ChromaDB with embedding vector</li>
+            <li>Applies filters: course_name, doc_groups, conversation_id</li>
+            <li>Uses cosine similarity for ranking</li>
+            <li>Takes ~0.6 seconds for typical course (500-5000 documents)</li>
+        </ul>
+    </li>
+    <li><strong>Result Processing:</strong>
+        <ul>
+            <li>Retrieves top N matching chunks with metadata</li>
+            <li>Formats response with all fields</li>
+            <li>Returns JSON array sorted by relevance score</li>
+        </ul>
+    </li>
+</ol>
+
+<div class="flow-diagram">
+search_query → Azure OpenAI Embedding (1.2s)
+                      ↓
+            1536-dimensional vector
+                      ↓
+       ChromaDB Similarity Search (0.6s)
+                      ↓
+        Filter by course_name + params
+                      ↓
+           Return top N results
+                      ↓
+          Total time: ~1.9s
+</div>
+
+<h4>Performance Metrics</h4>
+
+<table>
+    <thead>
+        <tr>
+            <th>Operation</th>
+            <th>Average</th>
+            <th>P50</th>
+            <th>P95</th>
+            <th>P99</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Query Embedding</td>
+            <td>1.2s</td>
+            <td>1.1s</td>
+            <td>1.8s</td>
+            <td>2.5s</td>
+        </tr>
+        <tr>
+            <td>Vector Search (ChromaDB)</td>
+            <td>0.6s</td>
+            <td>0.5s</td>
+            <td>1.2s</td>
+            <td>2.0s</td>
+        </tr>
+        <tr>
+            <td>Result Processing</td>
+            <td>0.1s</td>
+            <td>0.05s</td>
+            <td>0.2s</td>
+            <td>0.3s</td>
+        </tr>
+        <tr>
+            <td><strong>Total Request Time</strong></td>
+            <td><strong>1.9s</strong></td>
+            <td><strong>1.7s</strong></td>
+            <td><strong>3.2s</strong></td>
+            <td><strong>4.8s</strong></td>
+        </tr>
+    </tbody>
+</table>
+
+<h4>Error Responses</h4>
+
+<pre><code>// 400 Bad Request - Missing parameters
+{
+  "error": "Missing required parameters",
+  "message": "search_query and course_name must be provided",
+  "code": "MISSING_PARAMS"
+}
+
+// 404 Not Found - Course doesn't exist
+{
+  "error": "Course not found",
+  "message": "No course with name 'CS999'",
+  "code": "COURSE_NOT_FOUND"
+}
+
+// 500 Internal Server Error - Embedding failure
+{
+  "error": "Failed to generate query embedding",
+  "message": "Azure OpenAI service unavailable",
+  "code": "EMBEDDING_ERROR"
+}</code></pre>
+
+<!-- POST /chat -->
+<h2 id="chat">1.3 AI Response Generation</h2>
+
+<div class="endpoint">
+    <h3><span class="method-badge method-post">POST</span>/chat</h3>
+    
+    <p><strong>Purpose:</strong> Generate AI-powered answers using retrieved context from course materials</p>
+    
+    <p><strong>Use Cases:</strong></p>
+    <ul>
+        <li>Student asks course-related question and gets instant AI tutor response</li>
+        <li>Interactive learning with follow-up questions and context awareness</li>
+        <li>Teaching assistant automation for common queries</li>
+        <li>24/7 course support with accurate, sourced responses</li>
+    </ul>
+</div>
+
+<div class="note">
+    <strong>💡 Key Feature:</strong> This endpoint automatically performs retrieval internally. You don't need to call <code>/getTopContexts</code> first unless you want manual control over context selection.
+</div>
+
+<h4>Request Format</h4>
+
+<pre><code>POST /chat
+Content-Type: application/json
+
+{
+  "course_name": "CS101",
+  "question": "Can you explain polymorphism with a simple example in Python?",
+  "conversation_id": "conv-uuid-optional",
+  "conversation_history": [
+    {
+      "role": "user",
+      "content": "What is OOP?"
+    },
+    {
+      "role": "assistant",
+      "content": "OOP is a programming paradigm based on objects..."
+    }
+  ]
+}</code></pre>
+
+<h4>Parameters</h4>
+
+<table>
+    <thead>
+        <tr>
+            <th>Parameter</th>
+            <th>Type</th>
+            <th>Required</th>
+            <th>Default</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>course_name</code></td>
+            <td>string</td>
+            <td>✅ Yes</td>
+            <td>-</td>
+            <td>Course identifier for context retrieval</td>
+        </tr>
+        <tr>
+            <td><code>question</code></td>
+            <td>string</td>
+            <td>✅ Yes</td>
+            <td>-</td>
+            <td>User's natural language question</td>
+        </tr>
+        <tr>
+            <td><code>conversation_id</code></td>
+            <td>string</td>
+            <td>❌ No</td>
+            <td>null</td>
+            <td>For conversation continuity and tracking</td>
+        </tr>
+        <tr>
+            <td><code>conversation_history</code></td>
+            <td>array[object]</td>
+            <td>❌ No</td>
+            <td>[]</td>
+            <td>Previous messages (last 5 turns used)</td>
+        </tr>
+    </tbody>
+</table>
+
+<h4>Response</h4>
+
+<pre><code>{
+  "answer": "Based on [Source 1 - Lecture_03_OOP_Concepts.pdf] and [Source 2 - Python_Examples.py], polymorphism allows objects of different types to be treated uniformly. Here's a simple Python example:\n\n```python\nclass Animal:\n    def speak(self):\n        pass\n\nclass Dog(Animal):\n    def speak(self):\n        return 'Woof!'\n\nclass Cat(Animal):\n    def speak(self):\n        return 'Meow!'\n\n# Polymorphism in action:\npets = [Dog(), Cat()]\nfor pet in pets:\n    print(pet.speak())  # Each calls their own speak()\n```\n\nThis demonstrates runtime polymorphism - the same method call (speak) produces different behavior based on the object's actual type.",
+  
+  "contexts": [
+    {
+      "text": "Polymorphism is one of the four fundamental principles...",
+      "readable_filename": "Lecture_03_OOP_Concepts.pdf",
+      "score": 0.8947,
+      "pagenumber": "12"
+    },
+    {
+      "text": "Example of polymorphism in Python:\n\nclass Animal:...",
+      "readable_filename": "Python_Examples.py",
+      "score": 0.8201
+    }
+  ],
+  
+  "sources_used": 3,
+  "model": "gpt-4.1-mini",
+  
+  "usage": {
+    "prompt_tokens": 523,
+    "completion_tokens": 187,
+    "total_tokens": 710
+  }
+}</code></pre>
+
+<h4>Processing Flow</h4>
+
+<ol>
+    <li><strong>Receive Question:</strong> API validates parameters</li>
+    <li><strong>Context Retrieval (Internal):</strong>
+        <ul>
+            <li>Calls getTopContexts internally</li>
+            <li>Retrieves top 5 most relevant chunks</li>
+            <li>Takes ~1.9 seconds</li>
+        </ul>
+    </li>
+    <li><strong>Prompt Construction:</strong>
+        <ul>
+            <li>Builds system prompt with course context</li>
+            <li>Adds retrieved context chunks with source citations</li>
+            <li>Includes conversation history if provided</li>
+            <li>Adds user's current question</li>
+        </ul>
+    </li>
+    <li><strong>AI Generation:</strong>
+        <ul>
+            <li>Sends complete prompt to Azure OpenAI (gpt-4.1-mini)</li>
+            <li>Temperature: 0.7 (balanced creativity/accuracy)</li>
+            <li>Max tokens: 1500</li>
+            <li>Takes 2-4 seconds depending on response length</li>
+        </ul>
+    </li>
+    <li><strong>Response Formatting:</strong>
+        <ul>
+            <li>Parses AI response</li>
+            <li>Includes source contexts for transparency</li>
+            <li>Adds token usage for monitoring</li>
+        </ul>
+    </li>
+    <li><strong>Background Logging:</strong>
+        <ul>
+            <li>Async call to /llm-monitor-message</li>
+            <li>Tracks quality metrics</li>
+        </ul>
+    </li>
+</ol>
+
+<h4>System Prompt Template</h4>
+
+<div class="note">
+The following system prompt guides the AI's behavior to ensure educational, accurate responses:
+</div>
+
+<pre><code>You are a helpful AI teaching assistant for the {course_name} course.
+
+Your responsibilities:
+1. Answer student questions accurately using ONLY the provided context
+2. If the context doesn't contain enough information, say so honestly
+3. Cite sources when possible using [Source N - filename] notation
+4. Be clear, concise, and educational in your explanations
+5. If asked about topics outside course materials, politely redirect
+
+Always prioritize accuracy over making assumptions.
+Never invent information not present in the context.</code></pre>
+
+<h4>Performance Metrics</h4>
+
+<table>
+    <thead>
+        <tr>
+            <th>Stage</th>
+            <th>Average</th>
+            <th>P95</th>
+            <th>Notes</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Context Retrieval</td>
+            <td>1.9s</td>
+            <td>3.2s</td>
+            <td>Internal getTopContexts call</td>
+        </tr>
+        <tr>
+            <td>Prompt Construction</td>
+            <td>0.1s</td>
+            <td>0.2s</td>
+            <td>Fast in-memory operation</td>
+        </tr>
+        <tr>
+            <td>GPT-4.1-mini Generation</td>
+            <td>2.5s</td>
+            <td>6.0s</td>
+            <td>Varies with response length</td>
+        </tr>
+        <tr>
+            <td>Response Formatting</td>
+            <td>0.1s</td>
+            <td>0.2s</td>
+            <td>JSON serialization</td>
+        </tr>
+        <tr>
+            <td><strong>Total Request Time</strong></td>
+            <td><strong>4.6s</strong></td>
+            <td><strong>9.6s</strong></td>
+            <td><strong>Typical student question</strong></td>
+        </tr>
+    </tbody>
+</table>
+
+<h4>Error Responses</h4>
+
+<pre><code>// 400 Bad Request
+{
+  "error": "Missing required parameters",
+  "message": "question and course_name are required"
+}
+
+// 404 Not Found - No relevant context
+{
+  "answer": "I don't have enough information in the course materials to answer this question. Please try rephrasing or ask about topics covered in the course.",
+  "contexts": [],
+  "sources_used": 0
+}
+
+// 500 Internal Server Error
+{
+  "error": "AI generation failed",
+  "message": "Azure OpenAI service timeout",
+  "code": "GENERATION_ERROR"
+}</code></pre>
+
+<!-- POST /chat/stream -->
+<h2 id="chat-stream">1.4 Streaming Responses</h2>
+
+<div class="endpoint">
+    <h3><span class="method-badge method-post">POST</span>/chat/stream</h3>
+    
+    <p><strong>Purpose:</strong> Real-time streaming version of /chat for better user experience</p>
+    
+    <p><strong>Use Cases:</strong></p>
+    <ul>
+        <li>Show AI "thinking" and typing in real-time</li>
+        <li>Reduce perceived latency for long responses</li>
+        <li>Better UX for interactive conversations</li>
+        <li>Mobile apps with progressive rendering</li>
+    </ul>
+</div>
+
+<h4>Request Format</h4>
+
+<pre><code>POST /chat/stream
+Content-Type: application/json
+
+{
+  "course_name": "CS101",
+  "question": "Explain polymorphism in detail"
+}</code></pre>
+
+<div class="note">
+<strong>Parameters are identical to /chat</strong> but response format is different (streaming vs complete JSON)
+</div>
+
+<h4>Response Format</h4>
+
+<pre><code>HTTP/1.1 200 OK
+Content-Type: text/plain; charset=utf-8
+Transfer-Encoding: chunked
+
+Based on [Source 1], polymorphism...
+[text streams token by token]
+...allowing objects to take many forms.</code></pre>
+
+<h4>Client Implementation Example</h4>
+
+<pre><code>// JavaScript/TypeScript example
+const response = await fetch('/chat/stream', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    course_name: 'CS101',
+    question: 'What is polymorphism?'
+  })
+});
+
+const reader = response.body.getReader();
+const decoder = new TextDecoder();
+
+while (true) {
+  const { done, value } = await reader.read();
+  if (done) break;
+  
+  const chunk = decoder.decode(value);
+  console.log(chunk); // Display incrementally
+}</code></pre>
+
+<!-- ============================================ -->
+<!-- SECTION 2: CONTENT INGESTION -->
+<!-- ============================================ -->
+
+<h1 id="content-ingestion">2. Content Ingestion</h1>
+
+<p>Beyond manual file uploads, the system supports automated content ingestion from various sources including Learning Management Systems, research databases, and more.</p>
+
+<!-- POST /canvas_ingest -->
+<h2 id="canvas-ingest">2.1 Canvas LMS Integration</h2>
+
+<div class="endpoint">
+    <h3><span class="method-badge method-post">POST</span>/canvas_ingest</h3>
+    
+    <p><strong>Purpose:</strong> Bulk import course content directly from Canvas LMS</p>
+    
+    <p><strong>Use Cases:</strong></p>
+    <ul>
+        <li>One-click import of entire Canvas course</li>
+        <li>Scheduled sync of course materials (nightly updates)</li>
+        <li>Import specific content types (files only, no discussions)</li>
+        <li>Automated content refresh for large courses</li>
+    </ul>
+</div>
+
+<h4>Prerequisites</h4>
+
+<div class="warning">
+<strong>⚠️ Required:</strong> Canvas Access Token must be configured in environment variables (<code>CANVAS_ACCESS_TOKEN</code>). Without this, the endpoint will return 500 error.
+</div>
+
+<h4>Request Format</h4>
+
+<pre><code>POST /canvas_ingest
+Content-Type: application/json
+
+{
+  "course_name": "CS101",
+  "canvas_url": "https://canvas.illinois.edu/courses/12345",
+  "files": true,
+  "pages": true,
+  "modules": true,
+  "syllabus": true,
+  "assignments": true,
+  "discussions": false
+}</code></pre>
+
+<h4>Parameters</h4>
+
+<table>
+    <thead>
+        <tr>
+            <th>Parameter</th>
+            <th>Type</th>
+            <th>Required</th>
+            <th>Default</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>course_name</code></td>
+            <td>string</td>
+            <td>✅ Yes</td>
+            <td>-</td>
+            <td>Your local course identifier</td>
+        </tr>
+        <tr>
+            <td><code>canvas_url</code></td>
+            <td>string</td>
+            <td>✅ Yes</td>
+            <td>-</td>
+            <td>Full Canvas course URL</td>
+        </tr>
+        <tr>
+            <td><code>files</code></td>
+            <td>boolean</td>
+            <td>❌ No</td>
+            <td>true</td>
+            <td>Import uploaded files (PDFs, docs, etc.)</td>
+        </tr>
+        <tr>
+            <td><code>pages</code></td>
+            <td>boolean</td>
+            <td>❌ No</td>
+            <td>true</td>
+            <td>Import wiki pages</td>
+        </tr>
+        <tr>
+            <td><code>modules</code></td>
+            <td>boolean</td>
+            <td>❌ No</td>
+            <td>true</td>
+            <td>Import module content and structure</td>
+        </tr>
+        <tr>
+            <td><code>syllabus</code></td>
+            <td>boolean</td>
+            <td>❌ No</td>
+            <td>true</td>
+            <td>Import course syllabus</td>
+        </tr>
+        <tr>
+            <td><code>assignments</code></td>
+            <td>boolean</td>
+            <td>❌ No</td>
+            <td>true</td>
+            <td>Import assignment descriptions and rubrics</td>
+        </tr>
+        <tr>
+            <td><code>discussions</code></td>
+            <td>boolean</td>
+            <td>❌ No</td>
+            <td>true</td>
+            <td>Import discussion board threads</td>
+        </tr>
+    </tbody>
+</table>
+
+<h4>Response</h4>
+
+<pre><code>{
+  "outcome": "Queued Canvas Ingest task",
+  "ingest_task_ids": [
+    "canvas-files-abc123",
+    "canvas-pages-def456",
+    "canvas-modules-ghi789",
+    "canvas-syllabus-jkl012"
+  ],
+  "success": true,
+  "estimated_items": 127
+}</code></pre>
+
+<h4>Processing Flow</h4>
+
+<ol>
+    <li><strong>Authentication:</strong> Validates Canvas access token</li>
+    <li><strong>Auto-enrollment:</strong> Accepts pending enrollments for the course</li>
+    <li><strong>Content Discovery:</strong>
+        <ul>
+            <li>Queries Canvas API for each selected content type</li>
+            <li>Counts total items to process</li>
+        </ul>
+    </li>
+    <li><strong>Parallel Task Creation:</strong>
+        <ul>
+            <li>Creates separate ingestion task for each content type</li>
+            <li>Each task processed by dedicated worker</li>
+            <li>Up to 6 parallel workers (one per content type)</li>
+        </ul>
+    </li>
+    <li><strong>Worker Processing:</strong>
+        <ul>
+            <li>Downloads content from Canvas</li>
+            <li>Converts HTML to text where needed</li>
+            <li>Queues individual file ingestions</li>
+            <li>Progress tracked per task</li>
+        </ul>
+    </li>
+    <li><strong>Completion Notification:</strong>
+        <ul>
+            <li>Email sent when all tasks complete</li>
+            <li>Summary of items processed</li>
+        </ul>
+    </li>
+</ol>
+
+<h4>Typical Processing Time</h4>
+
+<table>
+    <thead>
+        <tr>
+            <th>Course Size</th>
+            <th>Items</th>
+            <th>Estimated Time</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Small Course</td>
+            <td>20-50 items</td>
+            <td>2-5 minutes</td>
+        </tr>
+        <tr>
+            <td>Medium Course</td>
+            <td>50-150 items</td>
+            <td>5-15 minutes</td>
+        </tr>
+        <tr>
+            <td>Large Course</td>
+            <td>150-500 items</td>
+            <td>15-45 minutes</td>
+        </tr>
+        <tr>
+            <td>Very Large Course</td>
+            <td>500+ items</td>
+            <td>45+ minutes</td>
+        </tr>
+    </tbody>
+</table>
+
+<h4>Error Responses</h4>
+
+<pre><code>// 500 - Missing Canvas token
+{
+  "error": "Canvas access token not configured",
+  "message": "CANVAS_ACCESS_TOKEN environment variable not set"
+}
+
+// 500 - Invalid Canvas URL
+{
+  "error": "Invalid Canvas URL",
+  "message": "Could not extract course ID from URL"
+}
+
+// 500 - Canvas API error
+{
+  "error": "Canvas API request failed",
+  "message": "Course not found or access denied",
+  "canvas_error": "Unauthorized"
+}</code></pre>
+
+<!-- GET /pubmedExtraction -->
+<h2 id="pubmed">2.2 PubMed Research Integration</h2>
+
+<div class="endpoint">
+    <h3><span class="method-badge method-get">GET</span>/pubmedExtraction</h3>
+    
+    <p><strong>Purpose:</strong> Import medical research papers from PubMed database</p>
+    
+    <p><strong>Use Cases:</strong></p>
+    <ul>
+        <li>Medical school courses with research components</li>
+        <li>Clinical knowledge base creation</li>
+        <li>Evidence-based medicine support</li>
+        <li>Literature review automation</li>
+    </ul>
+</div>
+
+<h4>Request Format</h4>
+
+<pre><code>GET /pubmedExtraction?project_name=MedEd101&search_query=diabetes+treatment+guidelines&count=20</code></pre>
+
+<h4>Parameters</h4>
+
+<table>
+    <thead>
+        <tr>
+            <th>Parameter</th>
+            <th>Type</th>
+            <th>Required</th>
+            <th>Default</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>project_name</code></td>
+            <td>string</td>
+            <td>✅ Yes</td>
+            <td>-</td>
+            <td>Course/project identifier</td>
+        </tr>
+        <tr>
+            <td><code>search_query</code></td>
+            <td>string</td>
+            <td>✅ Yes</td>
+            <td>-</td>
+            <td>PubMed search terms (use + for spaces)</td>
+        </tr>
+        <tr>
+            <td><code>count</code></td>
+            <td>integer</td>
+            <td>❌ No</td>
+            <td>10</td>
+            <td>Number of papers to retrieve (1-100)</td>
+        </tr>
+    </tbody>
+</table>
+
+<h4>Response</h4>
+
+<pre><code>{
+  "outcome": "Queued PubMed extraction task",
+  "task_id": "pubmed-xyz789",
+  "search_query": "diabetes treatment guidelines",
+  "papers_found": 20,
+  "success": true
+}</code></pre>
+
+<h4>Extracted Content</h4>
+
+<p>For each paper, the system attempts to extract:</p>
+
+<ul>
+    <li><strong>Abstract:</strong> Always available from PubMed</li>
+    <li><strong>Full Text:</strong> If available via PMC (PubMed Central)</li>
+    <li><strong>Metadata:</strong> Authors, journal, publication date, DOI</li>
+    <li><strong>Citations:</strong> References and citing articles</li>
+    <li><strong>MeSH Terms:</strong> Medical Subject Headings for categorization</li>
+</ul>
+
+<!-- POST /process-chat-file -->
+<h2 id="process-chat-file">2.3 Conversation File Upload</h2>
+
+<div class="endpoint">
+    <h3><span class="method-badge method-post">POST</span>/process-chat-file</h3>
+    
+    <p><strong>Purpose:</strong> Process files uploaded during active conversations for immediate Q&A</p>
+    
+    <p><strong>Use Cases:</strong></p>
+    <ul>
+        <li>Student uploads homework for instant AI review</li>
+        <li>Quick document analysis during chat</li>
+        <li>Instructor shares supplementary material mid-conversation</li>
+        <li>Real-time document-based Q&A</li>
+    </ul>
+</div>
+
+<div class="note">
+<strong>🚀 Fast Processing:</strong> Unlike regular ingestion, this endpoint processes synchronously and returns results immediately (10-30 seconds). File is immediately available for questions.
+</div>
+
+<h4>Request Format</h4>
+
+<pre><code>POST /process-chat-file
+Content-Type: application/json
+
+{
+  "conversation_id": "conv-uuid-123",
+  "s3_path": "uploads/user-456/homework1.pdf",
+  "course_name": "CS101",
+  "readable_filename": "Homework 1 Submission",
+  "user_id": "user-456"
+}</code></pre>
+
+<h4>Parameters</h4>
+
+<table>
+    <thead>
+        <tr>
+            <th>Parameter</th>
+            <th>Type</th>
+            <th>Required</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>conversation_id</code></td>
+            <td>string</td>
+            <td>✅ Yes</td>
+            <td>Active conversation UUID</td>
+        </tr>
+        <tr>
+            <td><code>s3_path</code></td>
+            <td>string</td>
+            <td>✅ Yes</td>
+            <td>Azure Blob path of uploaded file</td>
+        </tr>
+        <tr>
+            <td><code>course_name</code></td>
+            <td>string</td>
+            <td>❌ No</td>
+            <td>Course context (defaults to "chat")</td>
+        </tr>
+        <tr>
+            <td><code>readable_filename</code></td>
+            <td>string</td>
+            <td>❌ No</td>
+            <td>Display name</td>
+        </tr>
+        <tr>
+            <td><code>user_id</code></td>
+            <td>string</td>
+            <td>❌ No</td>
+            <td>User identifier for access control</td>
+        </tr>
+    </tbody>
+</table>
+
+<h4>Response</h4>
+
+<pre><code>{
+  "success": true,
+  "chunks_created": 15,
+  "status": "completed",
+  "message": "File processed and ready for chat"
+}</code></pre>
+
+<h4>Key Differences from Regular Ingestion</h4>
+
+<table>
+    <thead>
+        <tr>
+            <th>Feature</th>
+            <th>Regular /ingest</th>
+            <th>/process-chat-file</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Processing</td>
+            <td>Asynchronous</td>
+            <td>Synchronous</td>
+        </tr>
+        <tr>
+            <td>Response Time</td>
+            <td>200ms (immediate)</td>
+            <td>10-30s (waits for completion)</td>
+        </tr>
+        <tr>
+            <td>Availability</td>
+            <td>30-60 seconds after upload</td>
+            <td>Immediately upon response</td>
+        </tr>
+        <tr>
+            <td>Scope</td>
+            <td>Course-wide</td>
+            <td>Conversation-specific</td>
+        </tr>
+        <tr>
+            <td>Use Case</td>
+            <td>Permanent course materials</td>
+            <td>Temporary chat context</td>
+        </tr>
+    </tbody>
+</table>
+
+<!-- ============================================ -->
+<!-- SECTION 3: DATA MANAGEMENT -->
+<!-- ============================================ -->
+
+<h1 id="data-management">3. Data Management</h1>
+
+<p>Comprehensive tools for viewing, exporting, and managing course documents and conversation data.</p>
+
+<!-- GET /getAll -->
+<h2 id="getAll">3.1 List All Documents</h2>
+
+<div class="endpoint">
+    <h3><span class="method-badge method-get">GET</span>/getAll</h3>
+    
+    <p><strong>Purpose:</strong> Retrieve complete list of documents for a course</p>
+    
+    <p><strong>Use Cases:</strong></p>
+    <ul>
+        <li>Admin dashboard showing course materials</li>
+        <li>Document inventory for auditing</li>
+        <li>Content management interface</li>
+        <li>Duplicate detection</li>
+    </ul>
+</div>
+
+<h4>Request Format</h4>
+
+<pre><code>GET /getAll?course_name=CS101</code></pre>
+
+<h4>Response</h4>
+
+<pre><code>{
+  "distinct_files": [
+    {
+      "readable_filename": "Lecture_01_Introduction.pdf",
+      "s3_path": "CS101/documents/uuid-abc-123.pdf",
+      "url": "https://courses.example.edu/cs101/lecture01.pdf",
+      "created_at": "2025-01-15T10:30:00Z",
+      "doc_groups": ["lectures", "week1"],
+      "page_count": 25,
+      "file_size": "2.4 MB",
+      "chunk_count": 18
+    },
+    {
+      "readable_filename": "Syllabus_Fall_2025.pdf",
+      "s3_path": "CS101/documents/uuid-def-456.pdf",
+      "created_at": "2025-01-10T08:00:00Z",
+      "doc_groups": ["admin"],
+      "page_count": 5
+    },
+    {
+      "readable_filename": "Assignment_01.docx",
+      "s3_path": "CS101/assignments/uuid-ghi-789.docx",
+      "created_at": "2025-01-20T14:00:00Z",
+      "doc_groups": ["assignments"],
+      "chunk_count": 8
+    }
+  ],
+  "total_count": 42,
+  "total_chunks": 356
+}</code></pre>
+
+<!-- DELETE /delete -->
+<h2 id="delete">3.2 Delete Documents</h2>
+
+<div class="endpoint">
+    <h3><span class="method-badge method-delete">DELETE</span>/delete</h3>
+    
+    <p><strong>Purpose:</strong> Remove document from all system components</p>
+    
+    <p><strong>Use Cases:</strong></p>
+    <ul>
+        <li>Remove outdated course materials</li>
+        <li>Delete incorrect uploads</li>
+        <li>Content moderation</li>
+        <li>GDPR/data retention compliance</li>
+    </ul>
+</div>
+
+<div class="warning">
+<strong>⚠️ Warning:</strong> Deletion is asynchronous and "best effort." The endpoint returns success immediately, but actual deletion happens in background. Deleted content may still appear in cached searches for a few minutes.
+</div>
+
+<h4>Request Format</h4>
+
+<pre><code>DELETE /delete?course_name=CS101&s3_path=CS101/documents/uuid-abc-123.pdf</code></pre>
+
+<p><strong>OR identify by URL:</strong></p>
+
+<pre><code>DELETE /delete?course_name=CS101&url=https://example.com/old-lecture.pdf</code></pre>
+
+<h4>Parameters</h4>
+
+<table>
+    <thead>
+        <tr>
+            <th>Parameter</th>
+            <th>Type</th>
+            <th>Required</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>course_name</code></td>
+            <td>string</td>
+            <td>✅ Yes</td>
+            <td>Course identifier</td>
+        </tr>
+        <tr>
+            <td><code>s3_path</code></td>
+            <td>string</td>
+            <td>✅*</td>
+            <td>Azure Blob Storage path of document</td>
+        </tr>
+        <tr>
+            <td><code>url</code></td>
+            <td>string</td>
+            <td>✅*</td>
+            <td>Original source URL of document</td>
+        </tr>
+    </tbody>
+</table>
+
+<p style="font-size: 9pt; color: #64748b;">* Either <code>s3_path</code> or <code>url</code> must be provided</p>
+
+<h4>Response</h4>
+
+<pre><code>{
+  "outcome": "success",
+  "deleted": true,
+  "message": "Deletion queued for background processing"
+}</code></pre>
+
+<h4>What Gets Deleted</h4>
+
+<ol>
+    <li><strong>Azure Blob Storage:</strong> Original file removed</li>
+    <li><strong>ChromaDB:</strong> All vector embeddings for document chunks</li>
+    <li><strong>MS SQL Server:</strong> Document metadata and references</li>
+    <li><strong>Nomic Maps:</strong> Visualization points (on next update)</li>
+</ol>
+
+<!-- GET /exportDocuments -->
+<h2 id="export-docs">3.3 Export Document Metadata</h2>
+
+<div class="endpoint">
+    <h3><span class="method-badge method-get">GET</span>/exportDocuments</h3>
+    
+    <p><strong>Purpose:</strong> Export complete document inventory as JSON or CSV</p>
+    
+    <p><strong>Use Cases:</strong></p>
+    <ul>
+        <li>Backup document registry</li>
+        <li>Content audit reports</li>
+        <li>Data migration preparation</li>
+        <li>Analytics and reporting</li>
+    </ul>
+</div>
+
+<h4>Request Format</h4>
+
+<pre><code>GET /exportDocuments?course_name=CS101&format=csv</code></pre>
+
+<h4>Parameters</h4>
+
+<table>
+    <thead>
+        <tr>
+            <th>Parameter</th>
+            <th>Type</th>
+            <th>Default</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>course_name</code></td>
+            <td>string</td>
+            <td>required</td>
+            <td>Course to export</td>
+        </tr>
+        <tr>
+            <td><code>format</code></td>
+            <td>string</td>
+            <td>json</td>
+            <td>Output format: json or csv</td>
+        </tr>
+    </tbody>
+</table>
+
+<h4>Response (CSV)</h4>
+
+<pre><code>filename,s3_path,upload_date,page_count,chunk_count,doc_groups,file_size
+"Lecture_01.pdf","CS101/uuid-123.pdf","2025-01-15T10:30:00Z",25,18,"lectures|week1","2.4 MB"
+"Syllabus.pdf","CS101/uuid-456.pdf","2025-01-10T08:00:00Z",5,7,"admin","340 KB"</code></pre>
+
+<!-- GET /export-convo-history -->
+<h2 id="export-convo">3.4 Export Conversation Data</h2>
+
+<div class="endpoint">
+    <h3><span class="method-badge method-get">GET</span>/export-convo-history</h3>
+    
+    <p><strong>Purpose:</strong> Export conversation history for analysis, backup, or training</p>
+    
+    <p><strong>Use Cases:</strong></p>
+    <ul>
+        <li>Research on student learning patterns</li>
+        <li>AI model fine-tuning data collection</li>
+        <li>Quality assurance and monitoring</li>
+        <li>Student engagement analytics</li>
+    </ul>
+</div>
+
+<h4>Request Format</h4>
+
+<pre><code>GET /export-convo-history?course_name=CS101&format=json&from_date=2025-01-01&to_date=2025-01-31</code></pre>
+
+<h4>Parameters</h4>
+
+<table>
+    <thead>
+        <tr>
+            <th>Parameter</th>
+            <th>Type</th>
+            <th>Default</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>course_name</code></td>
+            <td>string</td>
+            <td>required</td>
+            <td>Course filter</td>
+        </tr>
+        <tr>
+            <td><code>format</code></td>
+            <td>string</td>
+            <td>json</td>
+            <td>json or csv</td>
+        </tr>
+        <tr>
+            <td><code>from_date</code></td>
+            <td>string</td>
+            <td>null</td>
+            <td>ISO date (YYYY-MM-DD)</td>
+        </tr>
+        <tr>
+            <td><code>to_date</code></td>
+            <td>string</td>
+            <td>null</td>
+            <td>ISO date (YYYY-MM-DD)</td>
+        </tr>
+        <tr>
+            <td><code>user_id</code></td>
+            <td>string</td>
+            <td>null</td>
+            <td>Filter by specific user</td>
+        </tr>
+    </tbody>
+</table>
+
+<h4>Response (JSON)</h4>
+
+<pre><code>{
+  "conversations": [
+    {
+      "id": "conv-uuid-123",
+      "course_name": "CS101",
+      "user_id": "user-456",
+      "created_at": "2025-01-15T14:23:00Z",
+      "messages": [
+        {
+          "role": "user",
+          "content": "What is polymorphism?",
+          "timestamp": "2025-01-15T14:23:00Z"
+        },
+        {
+          "role": "assistant",
+          "content": "Based on [Source 1], polymorphism is...",
+          "timestamp": "2025-01-15T14:23:05Z",
+          "contexts_used": 3,
+          "tokens": 245,
+          "model": "gpt-4.1-mini"
+        }
+      ],
+      "total_messages": 6,
+      "satisfaction_rating": 4.5,
+      "duration_seconds": 420
+    }
+  ],
+  "total_conversations": 156,
+  "total_messages": 892,
+  "date_range": {
+    "from": "2025-01-01",
+    "to": "2025-01-31"
+  },
+  "exported_at": "2025-02-01T10:00:00Z"
+}</code></pre>
+
+<h4>Privacy Considerations</h4>
+
+<div class="warning">
+<strong>🔒 Privacy:</strong> Exported data may contain student questions and interactions. Ensure FERPA compliance:
+<ul>
+    <li>Anonymize user identifiers if sharing externally</li>
+    <li>Restrict access to authorized personnel only</li>
+    <li>Store securely with encryption at rest</li>
+    <li>Delete after retention period expires</li>
+</ul>
+</div>
+
+<!-- ============================================ -->
+<!-- SECTION 4: ANALYTICS & MONITORING -->
+<!-- ============================================ -->
+
+<h1 id="analytics">4. Analytics & Monitoring</h1>
+
+<p>Comprehensive metrics and insights for course performance, user engagement, and system health.</p>
+
+<!-- GET /getProjectStats -->
+<h2 id="project-stats">4.1 Project Statistics</h2>
+
+<div class="endpoint">
+    <h3><span class="method-badge method-get">GET</span>/getProjectStats</h3>
+    
+    <p><strong>Purpose:</strong> Get high-level overview of course metrics</p>
+    
+    <p><strong>Use Cases:</strong></p>
+    <ul>
+        <li>Admin dashboard summary</li>
+        <li>Course health monitoring</li>
+        <li>Resource usage tracking</li>
+        <li>ROI analysis</li>
+    </ul>
+</div>
+
+<h4>Request Format</h4>
+
+<pre><code>GET /getProjectStats?course_name=CS101</code></pre>
+
+<h4>Response</h4>
+
+<pre><code>{
+  "course_name": "CS101",
+  "created_at": "2024-09-01T00:00:00Z",
+  "last_activity": "2025-01-20T14:30:00Z",
+  
+  "documents": {
+    "total": 45,
+    "by_type": {
+      "pdf": 32,
+      "video": 8,
+      "docx": 3,
+      "other": 2
+    },
+    "total_chunks": 456,
+    "total_size_mb": 234.5
+  },
+  
+  "conversations": {
+    "total": 1250,
+    "this_week": 87,
+    "this_month": 342,
+    "avg_per_day": 12.4,
+    "avg_messages_per_conversation": 4.2
+  },
+  
+  "users": {
+    "total_unique": 234,
+    "active_this_week": 89,
+    "active_this_month": 178
+  },
+  
+  "ai_usage": {
+    "total_tokens": 5234567,
+    "this_month_tokens": 234567,
+    "estimated_cost_usd": 52.35,
+    "avg_response_time_seconds": 4.6
+  },
+  
+  "engagement": {
+    "avg_satisfaction": 4.3,
+    "questions_answered": 5234,
+    "unique_topics": 342
+  }
+}</code></pre>
+
+<!-- GET /getWeeklyTrends -->
+<h2 id="weekly-trends">4.2 Weekly Trends</h2>
+
+<div class="endpoint">
+    <h3><span class="method-badge method-get">GET</span>/getWeeklyTrends</h3>
+    
+    <p><strong>Purpose:</strong> Track usage patterns and trends over time</p>
+</div>
+
+<h4>Request Format</h4>
+
+<pre><code>GET /getWeeklyTrends?course_name=CS101&weeks=8</code></pre>
+
+<h4>Response</h4>
+
+<pre><code>{
+  "course_name": "CS101",
+  "weeks": [
+    {
+      "week_start": "2025-01-13",
+      "week_end": "2025-01-19",
+      "conversations": 87,
+      "unique_users": 45,
+      "messages": 358,
+      "avg_response_time": 4.3,
+      "satisfaction_rate": 4.2,
+      "peak_hour": 14,
+      "total_tokens": 45678
+    },
+    {
+      "week_start": "2025-01-06",
+      "conversations": 92,
+      "unique_users": 48,
+      "satisfaction_rate": 4.5
+    }
+  ],
+  "trend_analysis": {
+    "conversations_trend": "increasing",
+    "satisfaction_trend": "stable",
+    "peak_usage_day": "Tuesday",
+    "peak_usage_hour": 14
+  }
+}</code></pre>
+
+<!-- GET /getModelUsageCounts -->
+<h2 id="model-usage">4.3 AI Model Usage</h2>
+
+<div class="endpoint">
+    <h3><span class="method-badge method-get">GET</span>/getModelUsageCounts</h3>
+    
+    <p><strong>Purpose:</strong> Track AI model usage and costs</p>
+</div>
+
+<h4>Response</h4>
+
+<pre><code>{
+  "period": {
+    "start": "2025-01-01",
+    "end": "2025-01-31"
+  },
+  "models": [
+    {
+      "model": "gpt-4.1-mini",
+      "requests": 1234,
+      "tokens": {
+        "prompt": 1567890,
+        "completion": 789012,
+        "total": 2356902
+      },
+      "avg_tokens_per_request": 1910,
+      "estimated_cost_usd": 23.57
+    },
+    {
+      "model": "text-embedding-3-small",
+      "requests": 5678,
+      "tokens": 8901234,
+      "estimated_cost_usd": 0.89
+    }
+  ],
+  "total_cost_usd": 24.46,
+  "cost_breakdown": {
+    "chat_generation": 23.57,
+    "embeddings": 0.89
+  }
+}</code></pre>
+
+<!-- GET /getConversationStats -->
+<h2 id="convo-stats">4.4 Conversation Analytics</h2>
+
+<div class="endpoint">
+    <h3><span class="method-badge method-get">GET</span>/getConversationStats</h3>
+    
+    <p><strong>Purpose:</strong> Deep dive into conversation patterns</p>
+</div>
+
+<h4>Response</h4>
+
+<pre><code>{
+  "course_name": "CS101",
+  "period": "last_30_days",
+  
+  "summary": {
+    "total_conversations": 1250,
+    "total_messages": 5234,
+    "avg_messages_per_conversation": 4.2,
+    "avg_conversation_duration_seconds": 420
+  },
+  
+  "satisfaction": {
+    "average_rating": 4.3,
+    "ratings_distribution": {
+      "5_stars": 45,
+      "4_stars": 35,
+      "3_stars": 15,
+      "2_stars": 3,
+      "1_star": 2
+    },
+    "with_feedback_percent": 23
+  },
+  
+  "top_topics": [
+    {"topic": "polymorphism", "count": 45, "avg_satisfaction": 4.5},
+    {"topic": "inheritance", "count": 38, "avg_satisfaction": 4.3},
+    {"topic": "data structures", "count": 32, "avg_satisfaction": 4.1}
+  ],
+  
+  "temporal_patterns": {
+    "peak_hours": [14, 15, 16, 20],
+    "peak_days": ["Tuesday", "Wednesday", "Thursday"],
+    "busiest_hour": "2pm-3pm",
+    "slowest_hour": "3am-4am"
+  },
+  
+  "performance": {
+    "avg_response_time_seconds": 4.6,
+    "response_time_p50": 3.9,
+    "response_time_p95": 8.2,
+    "response_time_p99": 12.1
+  },
+  
+  "quality_metrics": {
+    "context_relevance_avg": 0.87,
+    "answer_accuracy_estimated": 0.91,
+    "source_citation_rate": 0.95
+  }
+}</code></pre>
+
+<!-- POST /llm-monitor-message -->
+<h2 id="llm-monitor">4.5 Conversation Monitoring</h2>
+
+<div class="endpoint">
+    <h3><span class="method-badge method-post">POST</span>/llm-monitor-message</h3>
+    
+    <p><strong>Purpose:</strong> Track individual conversation quality and metrics</p>
+    
+    <p><strong>Use Cases:</strong></p>
+    <ul>
+        <li>Real-time quality monitoring</li>
+        <li>Detect problematic responses</li>
+        <li>User satisfaction tracking</li>
+        <li>Model performance analysis</li>
+    </ul>
+</div>
+
+<div class="note">
+<strong>🔄 Automatic:</strong> This endpoint is called automatically after each /chat request. Manual calls are optional for custom tracking.
+</div>
+
+<h4>Request Format</h4>
+
+<pre><code>POST /llm-monitor-message
+Content-Type: application/json
+
+{
+  "course_name": "CS101",
+  "conversation_id": "conv-uuid-123",
+  "user_email": "student@university.edu",
+  "model_name": "gpt-4.1-mini"
+}</code></pre>
+
+<h4>Response</h4>
+
+<pre><code>{
+  "outcome": "Task started",
+  "monitoring_enabled": true
+}</code></pre>
+
+<h4>What Gets Tracked</h4>
+
+<ul>
+    <li><strong>Response Quality:</strong> Context relevance, answer coherence</li>
+    <li><strong>Performance:</strong> Response time, token usage</li>
+    <li><strong>User Behavior:</strong> Follow-up questions, satisfaction signals</li>
+    <li><strong>Error Rates:</strong> Failed retrievals, generation errors</li>
+    <li><strong>Cost Attribution:</strong> Per-user, per-course token usage</li>
+</ul>
+
+<!-- ============================================ -->
+<!-- SECTION 5: VISUALIZATION -->
+<!-- ============================================ -->
+
+<h1 id="visualization">5. Visualization</h1>
+
+<p>Interactive document and conversation maps using Nomic Atlas for data exploration and insights.</p>
+
+<!-- GET /getNomicMap -->
+<h2 id="get-nomic">5.1 View Nomic Maps</h2>
+
+<div class="endpoint">
+    <h3><span class="method-badge method-get">GET</span>/getNomicMap</h3>
+    
+    <p><strong>Purpose:</strong> Get interactive 2D visualization of documents or conversations</p>
+    
+    <p><strong>Use Cases:</strong></p>
+    <ul>
+        <li>Explore document clustering and topics</li>
+        <li>Identify knowledge gaps in course materials</li>
+        <li>Visualize conversation themes</li>
+        <li>Discover content relationships</li>
+    </ul>
+</div>
+
+<h4>Request Format</h4>
+
+<pre><code>GET /getNomicMap?course_name=CS101&map_type=document</code></pre>
+
+<h4>Parameters</h4>
+
+<table>
+    <thead>
+        <tr>
+            <th>Parameter</th>
+            <th>Type</th>
+            <th>Options</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>course_name</code></td>
+            <td>string</td>
+            <td>-</td>
+            <td>Course identifier</td>
+        </tr>
+        <tr>
+            <td><code>map_type</code></td>
+            <td>string</td>
+            <td>document, conversation</td>
+            <td>Type of visualization</td>
+        </tr>
+    </tbody>
+</table>
+
+<h4>Response</h4>
+
+<pre><code>{
+  "map_url": "https://atlas.nomic.ai/map/abc-123-def-456",
+  "embed_html": "&lt;iframe src='https://atlas.nomic.ai/map/abc-123/embed' width='100%' height='600'&gt;&lt;/iframe&gt;",
+  "map_id": "abc-123-def-456",
+  "total_points": 450,
+  "last_updated": "2025-01-20T10:00:00Z",
+  
+  "clusters": [
+    {
+      "id": 1,
+      "label": "OOP Concepts",
+      "size": 125,
+      "centroid": [0.234, -0.567]
+    },
+    {
+      "id": 2,
+      "label": "Data Structures",
+      "size": 98,
+      "centroid": [-0.123, 0.456]
+    },
+    {
+      "id": 3,
+      "label": "Algorithms",
+      "size": 87
+    }
+  ],
+  
+  "insights": {
+    "most_central_topic": "Object-Oriented Programming",
+    "isolated_topics": ["Advanced Concurrency"],
+    "largest_cluster": "OOP Concepts"
+  }
+}</code></pre>
+
+<h4>Embedding in Web Pages</h4>
+
+<pre><code>&lt;!-- Embed Nomic map in your web app --&gt;
+&lt;iframe 
+  src="https://atlas.nomic.ai/map/abc-123-def-456/embed"
+  width="100%"
+  height="600"
+  frameborder="0"
+  style="border-radius: 8px;"
+&gt;&lt;/iframe&gt;</code></pre>
+
+<!-- GET /createDocumentMap -->
+<h2 id="create-doc-map">5.2 Create Document Map</h2>
+
+<div class="endpoint">
+    <h3><span class="method-badge method-get">GET</span>/createDocumentMap</h3>
+    
+    <p><strong>Purpose:</strong> Initialize new document visualization for a course</p>
+</div>
+
+<h4>Request Format</h4>
+
+<pre><code>GET /createDocumentMap?course_name=CS101</code></pre>
+
+<h4>Processing</h4>
+
+<ol>
+    <li>Fetches all document embeddings from ChromaDB</li>
+    <li>Applies dimensionality reduction (UMAP)</li>
+    <li>Creates interactive atlas on Nomic platform</li>
+    <li>Returns map URL and embed code</li>
+    <li>Typical time: 2-5 minutes for 500 documents</li>
+</ol>
+
+<!-- GET /createConversationMap -->
+<h2 id="create-convo-map">5.3 Create Conversation Map</h2>
+
+<div class="endpoint">
+    <h3><span class="method-badge method-get">GET</span>/createConversationMap</h3>
+    
+    <p><strong>Purpose:</strong> Initialize conversation topic visualization</p>
+</div>
+
+<p>Similar to document map but visualizes conversation themes and user questions.</p>
+
+<!-- Map Updates -->
+<h2 id="update-maps">5.4 Map Update Operations</h2>
+
+<h3>GET /updateDocumentMaps</h3>
+
+<p><strong>Purpose:</strong> Refresh document map with newly added materials</p>
+
+<pre><code>GET /updateDocumentMaps?course_name=CS101</code></pre>
+
+<h3>GET /updateConversationMaps</h3>
+
+<p><strong>Purpose:</strong> Refresh conversation map with recent discussions</p>
+
+<h3>GET /cleanUpDocumentMaps</h3>
+
+<p><strong>Purpose:</strong> Remove deleted documents from visualization</p>
+
+<h3>GET /cleanUpConversationMaps</h3>
+
+<p><strong>Purpose:</strong> Remove old/irrelevant conversations</p>
+
+<div class="note">
+<strong>🔄 Automated:</strong> Maps are automatically updated daily via cron job at 6:00 AM UTC. Manual updates only needed for immediate refresh.
+</div>
+
+<!-- ============================================ -->
+<!-- SECTION 6: ADVANCED FEATURES -->
+<!-- ============================================ -->
+
+<h1 id="advanced">6. Advanced Features</h1>
+
+<p>Enhanced retrieval techniques, custom workflows, and knowledge graph integration.</p>
+
+<!-- Workflows -->
+<h2 id="workflows">6.1 Workflow Management</h2>
+
+<h3>GET /getworkflows</h3>
+
+<div class="endpoint">
+    <p><strong>Purpose:</strong> List available RAG workflows</p>
+</div>
+
+<h4>Response</h4>
+
+<pre><code>{
+  "workflows": [
+    {
+      "id": "default-rag",
+      "name": "Standard RAG",
+      "description": "Simple retrieve-then-generate",
+      "active": true
+    },
+    {
+      "id": "advanced-mqr",
+      "name": "Multi-Query Retrieval",
+      "description": "Generate multiple query variations",
+      "active": false
+    },
+    {
+      "id": "kg-enhanced",
+      "name": "Knowledge Graph Enhanced",
+      "description": "Combine vector search with knowledge graphs",
+      "active": false
+    }
+  ]
+}</code></pre>
+
+<h3>GET /switch_workflow</h3>
+
+<p><strong>Purpose:</strong> Change active workflow</p>
+
+<pre><code>GET /switch_workflow?course_name=CS101&workflow_id=advanced-mqr</code></pre>
+
+<h3>POST /run_flow</h3>
+
+<p><strong>Purpose:</strong> Execute custom workflow</p>
+
+<pre><code>POST /run_flow
+{
+  "course_name": "CS101",
+  "workflow_id": "advanced-mqr",
+  "input": {"question": "What is polymorphism?"}
+}</code></pre>
+
+<!-- MQR -->
+<h2 id="mqr">6.2 Multi-Query Retrieval</h2>
+
+<div class="endpoint">
+    <h3><span class="method-badge method-get">GET</span>/getTopContextsWithMQR</h3>
+    
+    <p><strong>Purpose:</strong> Enhanced retrieval using multiple query variations</p>
+</div>
+
+<h4>How It Works</h4>
+
+<ol>
+    <li>Original query: "What is polymorphism?"</li>
+    <li>Generates variations:
+        <ul>
+            <li>"Explain polymorphism in OOP"</li>
+            <li>"Define polymorphism concept"</li>
+            <li>"Polymorphism examples and uses"</li>
+        </ul>
+    </li>
+    <li>Searches with each variation</li>
+    <li>Merges and deduplicates results</li>
+    <li>Reranks by relevance</li>
+    <li>Returns top N unified results</li>
+</ol>
+
+<h4>Benefits</h4>
+
+<ul>
+    <li><strong>Higher Recall:</strong> Catches relevant docs missed by single query</li>
+    <li><strong>Better for Ambiguous Questions:</strong> Multiple perspectives</li>
+    <li><strong>Robust to Query Formulation:</strong> Less sensitive to exact wording</li>
+</ul>
+
+<h4>Trade-offs</h4>
+
+<ul>
+    <li><strong>Slower:</strong> 3-5x processing time (multiple searches)</li>
+    <li><strong>More Expensive:</strong> Multiple embedding API calls</li>
+    <li><strong>Use Selectively:</strong> Best for complex research queries</li>
+</ul>
+
+<!-- Knowledge Graphs -->
+<h2 id="knowledge-graphs">6.3 Knowledge Graph Queries</h2>
+
+<h3>GET /getClinicalKGContexts</h3>
+
+<div class="endpoint">
+    <p><strong>Purpose:</strong> Query clinical knowledge graph for medical courses</p>
+</div>
+
+<h4>Request</h4>
+
+<pre><code>GET /getClinicalKGContexts?entity=diabetes&relation=treats</code></pre>
+
+<h4>Use Cases</h4>
+
+<ul>
+    <li>Medical education courses</li>
+    <li>Drug interaction checking</li>
+    <li>Clinical decision support</li>
+    <li>Evidence-based medicine</li>
+</ul>
+
+<h3>GET /getPrimeKGContexts</h3>
+
+<p><strong>Purpose:</strong> Query PrimeKG biomedical knowledge graph</p>
+
+<p>Contains structured data on:</p>
+<ul>
+    <li>Diseases and conditions</li>
+    <li>Drugs and treatments</li>
+    <li>Genes and proteins</li>
+    <li>Biological pathways</li>
+    <li>Clinical relationships</li>
+</ul>
+
+<!-- ============================================ -->
+<!-- SECTION 7: UTILITIES -->
+<!-- ============================================ -->
+
+<h1 id="utilities">7. Utilities</h1>
+
+<p>Administrative and maintenance endpoints for system management.</p>
+
+<!-- POST /createProject -->
+<h2 id="create-project">7.1 Create Project</h2>
+
+<div class="endpoint">
+    <h3><span class="method-badge method-post">POST</span>/createProject</h3>
+    
+    <p><strong>Purpose:</strong> Initialize new course/project in the system</p>
+    
+    <p><strong>Use Cases:</strong></p>
+    <ul>
+        <li>Set up new course for semester</li>
+        <li>Create research project workspace</li>
+        <li>Initialize department knowledge base</li>
+    </ul>
+</div>
+
+<h4>Request Format</h4>
+
+<pre><code>POST /createProject
+Content-Type: application/json
+
+{
+  "course_name": "CS101",
+  "course_title": "Introduction to Computer Science",
+  "owner_id": "prof-123",
+  "settings": {
+    "public": false,
+    "allow_student_uploads": true,
+    "enable_analytics": true
+  }
+}</code></pre>
+
+<h4>Parameters</h4>
+
+<table>
+    <thead>
+        <tr>
+            <th>Parameter</th>
+            <th>Type</th>
+            <th>Required</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>course_name</code></td>
+            <td>string</td>
+            <td>✅ Yes</td>
+            <td>Unique identifier (no spaces or special chars)</td>
+        </tr>
+        <tr>
+            <td><code>course_title</code></td>
+            <td>string</td>
+            <td>❌ No</td>
+            <td>Human-readable course name</td>
+        </tr>
+        <tr>
+            <td><code>owner_id</code></td>
+            <td>string</td>
+            <td>❌ No</td>
+            <td>Instructor/admin user ID</td>
+        </tr>
+        <tr>
+            <td><code>settings</code></td>
+            <td>object</td>
+            <td>❌ No</td>
+            <td>Course configuration</td>
+        </tr>
+    </tbody>
+</table>
+
+<h4>Response</h4>
+
+<pre><code>{
+  "project_id": "proj-abc-123",
+  "course_name": "CS101",
+  "created_at": "2025-01-20T10:00:00Z",
+  "success": true,
+  "resources_created": {
+    "database_entry": true,
+    "azure_blob_container": true,
+    "chromadb_collection": true,
+    "nomic_maps": "queued"
+  }
+}</code></pre>
+
+<h4>What Gets Created</h4>
+
+<ol>
+    <li><strong>Database Entry:</strong> Project metadata in MS SQL Server</li>
+    <li><strong>Storage Container:</strong> Azure Blob container for files</li>
+    <li><strong>Vector Collection:</strong> ChromaDB collection for embeddings</li>
+    <li><strong>Visualizations:</strong> Nomic map spaces (created async)</li>
+    <li><strong>Default Settings:</strong> Access controls, quotas, preferences</li>
+</ol>
+
+<!-- GET /updateProjectDocuments -->
+<h2 id="update-project-docs">7.2 Update Project Documents</h2>
+
+<div class="endpoint">
+    <h3><span class="method-badge method-get">GET</span>/updateProjectDocuments</h3>
+    
+    <p><strong>Purpose:</strong> Synchronize document registry with actual storage</p>
+    
+    <p><strong>Use Cases:</strong></p>
+    <ul>
+        <li>After bulk file uploads to Azure Blob</li>
+        <li>Reconcile after manual changes</li>
+        <li>Audit document inventory</li>
+        <li>Fix metadata inconsistencies</li>
+    </ul>
+</div>
+
+<h4>Request</h4>
+
+<pre><code>GET /updateProjectDocuments?course_name=CS101</code></pre>
+
+<h4>Processing</h4>
+
+<ol>
+    <li>Scans Azure Blob Storage for files</li>
+    <li>Queries ChromaDB for vectors</li>
+    <li>Compares with MS SQL metadata</li>
+    <li>Reconciles differences:
+        <ul>
+            <li>Adds missing database entries</li>
+            <li>Removes orphaned records</li>
+            <li>Updates file sizes and dates</li>
+        </ul>
+    </li>
+</ol>
+
+<h4>Response</h4>
+
+<pre><code>{
+  "success": true,
+  "documents_found": 45,
+  "database_updated": 3,
+  "orphaned_removed": 1,
+  "discrepancies": []
+}</code></pre>
+
+<!-- POST /send-transactional-email -->
+<h2 id="send-email">7.3 Send Transactional Email</h2>
+
+<div class="endpoint">
+    <h3><span class="method-badge method-post">POST</span>/send-transactional-email</h3>
+    
+    <p><strong>Purpose:</strong> Send automated emails to users</p>
+</div>
+
+<h4>Request Format</h4>
+
+<pre><code>POST /send-transactional-email
+Content-Type: application/json
+
+{
+  "to_email": "student@university.edu",
+  "subject": "Your document has been processed",
+  "template": "ingestion_complete",
+  "data": {
+    "course_name": "CS101",
+    "document_name": "Lecture 01.pdf",
+    "chunks_created": 25,
+    "processing_time": "45 seconds"
+  }
+}</code></pre>
+
+<h4>Available Templates</h4>
+
+<ul>
+    <li><code>ingestion_complete</code> - Document processing finished</li>
+    <li><code>ingestion_failed</code> - Processing error notification</li>
+    <li><code>welcome</code> - New course enrollment</li>
+    <li><code>weekly_digest</code> - Usage summary</li>
+    <li><code>export_ready</code> - Data export completed</li>
+</ul>
+
+<!-- GET /health -->
+<h2 id="health">7.4 System Health Check</h2>
+
+<div class="endpoint">
+    <h3><span class="method-badge method-get">GET</span>/health</h3>
+    
+    <p><strong>Purpose:</strong> Verify system components are operational</p>
+</div>
+
+<h4>Request</h4>
+
+<pre><code>GET /health</code></pre>
+
+<h4>Response</h4>
+
+<pre><code>{
+  "status": "healthy",
+  "service": "ai-ta-backend",
+  "timestamp": 1705745432,
+  "version": "1.0.0",
+  
+  "components": {
+    "api": {
+      "status": "ok",
+      "response_time_ms": 5
+    },
+    "database": {
+      "status": "ok",
+      "connection_pool": "8/20 active"
+    },
+    "vector_db": {
+      "status": "ok",
+      "collection_count": 15,
+      "total_documents": 12456
+    },
+    "storage": {
+      "status": "ok",
+      "used_gb": 234.5
+    },
+    "queue": {
+      "status": "ok",
+      "pending_tasks": 3
+    },
+    "ai_services": {
+      "status": "ok",
+      "embeddings": "operational",
+      "chat": "operational"
+    }
+  },
+  
+  "recent_errors": 0,
+  "uptime_seconds": 3456789
+}</code></pre>
+
+<h4>Status Codes</h4>
+
+<table>
+    <thead>
+        <tr>
+            <th>HTTP Status</th>
+            <th>Meaning</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>200</td>
+            <td>All systems operational</td>
+            <td>None</td>
+        </tr>
+        <tr>
+            <td>503</td>
+            <td>One or more components degraded</td>
+            <td>Check component details</td>
+        </tr>
+        <tr>
+            <td>500</td>
+            <td>Critical system failure</td>
+            <td>Alert operations team</td>
+        </tr>
+    </tbody>
+</table>
+
