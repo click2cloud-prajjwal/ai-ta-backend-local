@@ -112,51 +112,71 @@ class Ingest:
         """Initialize Qdrant client and vectorstore with Azure OpenAI embeddings"""
         
         # Initialize Qdrant client and create collection if necessary
-        if self.qdrant_api_key and self.qdrant_url:
-            self.qdrant_client = QdrantClient(url=self.qdrant_url, api_key=self.qdrant_api_key)
-            
-            try:
-                collection_info = self.qdrant_client.get_collection(self.qdrant_collection_name)
-                logging.info(f"Collection {self.qdrant_collection_name} exists with {collection_info.points_count} points")
-            except Exception as e:
-                logging.info(f"Creating collection {self.qdrant_collection_name}")
-                self.qdrant_client.create_collection(
-                    collection_name=self.qdrant_collection_name,
-                    vectors_config=models.VectorParams(size=1536, distance=models.Distance.COSINE)  # text-embedding-3-small = 1536
-                )
-                
-                # Create indexes for filtering
-                self.qdrant_client.create_payload_index(
-                    collection_name=self.qdrant_collection_name,
-                    field_name="conversation_id",
-                    field_schema=models.PayloadSchemaType.KEYWORD
-                )
-                self.qdrant_client.create_payload_index(
-                    collection_name=self.qdrant_collection_name,
-                    field_name="course_name",
-                    field_schema=models.PayloadSchemaType.KEYWORD
-                )
-                logging.info("Created payload indexes for conversation_id and course_name")
-
-
-            
-            # Initialize Azure OpenAI embeddings
-            embeddings = AzureOpenAIEmbeddings(
-                azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
-                api_key=os.getenv("AZURE_OPENAI_KEY"),
-                api_version=os.environ["OPENAI_API_VERSION"],
-                model=os.environ["EMBEDDING_MODEL"],
-                deployment=os.environ["AZURE_OPENAI_ENGINE"]
+        # Detect if using local Qdrant
+        is_local_qdrant = "localhost" in self.qdrant_url or "127.0.0.1" in self.qdrant_url
+        
+        # Initialize Qdrant client and create collection if necessary
+        if is_local_qdrant:
+            # Local Qdrant (no API key needed)
+            logging.info("🧠 Using LOCAL Qdrant instance")
+            self.qdrant_client = QdrantClient(
+                url=self.qdrant_url,
+                api_key=None,
+                timeout=20
             )
-
-            self.vectorstore = Qdrant(
-                client=self.qdrant_client,
-                collection_name=self.qdrant_collection_name,
-                embeddings=embeddings
+        elif self.qdrant_api_key and self.qdrant_url:
+            # Cloud Qdrant (needs API key)
+            logging.info("☁️ Using CLOUD Qdrant instance")
+            self.qdrant_client = QdrantClient(
+                url=self.qdrant_url, 
+                api_key=self.qdrant_api_key,
+                timeout=20
             )
-            logging.info("✅ Vectorstore initialized with Azure OpenAI (text-embedding-3-small)")
         else:
-            logging.error("❌ QDRANT API KEY OR URL NOT FOUND!")
+            logging.error("❌ QDRANT URL NOT FOUND!")
+            return
+            
+        try:
+            collection_info = self.qdrant_client.get_collection(self.qdrant_collection_name)
+            logging.info(f"Collection {self.qdrant_collection_name} exists with {collection_info.points_count} points")
+        except Exception as e:
+            logging.info(f"Creating collection {self.qdrant_collection_name}")
+            self.qdrant_client.create_collection(
+                collection_name=self.qdrant_collection_name,
+                vectors_config=models.VectorParams(size=1536, distance=models.Distance.COSINE)  # text-embedding-3-small = 1536
+            )
+            
+            # Create indexes for filtering
+            self.qdrant_client.create_payload_index(
+                collection_name=self.qdrant_collection_name,
+                field_name="conversation_id",
+                field_schema=models.PayloadSchemaType.KEYWORD
+            )
+            self.qdrant_client.create_payload_index(
+                collection_name=self.qdrant_collection_name,
+                field_name="course_name",
+                field_schema=models.PayloadSchemaType.KEYWORD
+            )
+            logging.info("Created payload indexes for conversation_id and course_name")
+
+
+        
+        # Initialize Azure OpenAI embeddings
+        embeddings = AzureOpenAIEmbeddings(
+            azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
+            api_key=os.getenv("AZURE_OPENAI_KEY"),
+            api_version=os.environ["OPENAI_API_VERSION"],
+            model=os.environ["EMBEDDING_MODEL"],
+            deployment=os.environ["EMBEDDING_MODEL"]
+        )
+
+        self.vectorstore = Qdrant(
+            client=self.qdrant_client,
+            collection_name=self.qdrant_collection_name,
+            embeddings=embeddings
+        )
+        logging.info("✅ Vectorstore initialized with Azure OpenAI (text-embedding-3-small)")
+
 
                 # Connect to MinIO (S3-compatible)
         use_local_minio = os.getenv("LOCAL_MINIO", "false").lower() == "true"
@@ -515,7 +535,7 @@ class Ingest:
             logging.info(f"📄 Loading document from: {file_path}")
             
             # Load document
-            loader = TextLoader(file_path)
+            loader = TextLoader(file_path, encoding='utf-8')
             documents = loader.load()
             
             if not documents:

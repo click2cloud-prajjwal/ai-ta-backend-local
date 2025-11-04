@@ -5,6 +5,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import requests
 from injector import inject
 from langchain.embeddings.openai import OpenAIEmbeddings
+from langchain.embeddings import AzureOpenAIEmbeddings
 from langchain.vectorstores import Qdrant
 from qdrant_client import QdrantClient, models
 from qdrant_client.http.models import FieldCondition, MatchAny, MatchValue
@@ -21,12 +22,31 @@ class VectorDatabase():
     Initialize AWS S3, Qdrant, and Supabase.
     """
     # vector DB
-    self.qdrant_client = QdrantClient(
-        url=os.environ['QDRANT_URL'],
-        api_key=os.environ['QDRANT_API_KEY'],
-        port=os.getenv('QDRANT_PORT') if os.getenv('QDRANT_PORT') else None,
-        timeout=20,  # default is 5 seconds. Getting timeout errors w/ document groups.
-    )
+    # Detect local vs cloud Qdrant setup
+    qdrant_url = os.environ.get("QDRANT_URL", "http://localhost:6333")
+    qdrant_api_key = os.environ.get("QDRANT_API_KEY", "")
+    qdrant_port = int(os.getenv("QDRANT_PORT")) if os.getenv("QDRANT_PORT") else 6333
+
+    if "localhost" in qdrant_url or "127.0.0.1" in qdrant_url:
+        print("🧠 Using LOCAL Qdrant instance")
+        self.qdrant_client = QdrantClient(
+            url=qdrant_url,
+            port=qdrant_port,
+            https=False,
+            api_key=None,
+            check_version=False,
+            timeout=20
+        )
+    else:
+        print("☁️ Using CLOUD Qdrant instance")
+        self.qdrant_client = QdrantClient(
+            url=qdrant_url,
+            port=qdrant_port,
+            https=True,
+            api_key=qdrant_api_key,
+            check_version=False,
+            timeout=20
+        )
 
     self.vyriad_qdrant_client = QdrantClient(url=os.environ['VYRIAD_QDRANT_URL'],
                                              port=int(os.environ['VYRIAD_QDRANT_PORT']),
@@ -43,6 +63,20 @@ class VectorDatabase():
       print(f"Error in cropwizard_qdrant_client: {e}")
       self.cropwizard_qdrant_client = None
 
+    self.vectorstore = Qdrant(
+        client=self.qdrant_client,
+        collection_name=os.environ['QDRANT_COLLECTION_NAME'],
+        embeddings=AzureOpenAIEmbeddings(
+            azure_deployment=os.environ['EMBEDDING_MODEL'],
+            azure_endpoint=os.environ['AZURE_OPENAI_ENDPOINT'],
+            api_key=os.environ['AZURE_OPENAI_KEY'],
+            openai_api_type="azure",
+            openai_api_version=os.environ.get('OPENAI_API_VERSION', '2023-05-15'),
+            chunk_size=1
+        )
+    )
+
+    
     # self.openai_api_key = os.getenv('OPENAI_API_KEY') if os.getenv('OPENAI_API_KEY') else os.getenv('NCSA_HOSTED_API_KEY')
     # self.vectorstore = Qdrant(client=self.qdrant_client,
     #                           collection_name=os.environ['QDRANT_COLLECTION_NAME'],
