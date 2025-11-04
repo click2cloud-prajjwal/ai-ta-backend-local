@@ -5,7 +5,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import requests
 from injector import inject
 from langchain.embeddings.openai import OpenAIEmbeddings
-from langchain.embeddings import AzureOpenAIEmbeddings
+from langchain_openai import AzureOpenAIEmbeddings
 from langchain.vectorstores import Qdrant
 from qdrant_client import QdrantClient, models
 from qdrant_client.http.models import FieldCondition, MatchAny, MatchValue
@@ -34,7 +34,7 @@ class VectorDatabase():
             port=qdrant_port,
             https=False,
             api_key=None,
-            check_version=False,
+            # check_version=False,
             timeout=20
         )
     else:
@@ -44,7 +44,7 @@ class VectorDatabase():
             port=qdrant_port,
             https=True,
             api_key=qdrant_api_key,
-            check_version=False,
+            # check_version=False,
             timeout=20
         )
 
@@ -70,8 +70,7 @@ class VectorDatabase():
             azure_deployment=os.environ['EMBEDDING_MODEL'],
             azure_endpoint=os.environ['AZURE_OPENAI_ENDPOINT'],
             api_key=os.environ['AZURE_OPENAI_KEY'],
-            openai_api_type="azure",
-            openai_api_version=os.environ.get('OPENAI_API_VERSION', '2023-05-15'),
+            api_version=os.environ.get('OPENAI_API_VERSION', '2023-05-15'),
             chunk_size=1
         )
     )

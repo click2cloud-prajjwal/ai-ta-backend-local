@@ -690,7 +690,7 @@ class Ingest:
                     
                     # Small delay between batches to respect rate limits
                     if i + batch_size < len(contexts):
-                        time.sleep(0.1)
+                        time.sleep(2.0)
                 
                 elapsed_time = time.monotonic() - embeddings_start_time
                 logging.info(f"⏰ Embeddings generated in {elapsed_time:.2f} seconds ({len(embeddings_dict)} embeddings)")
