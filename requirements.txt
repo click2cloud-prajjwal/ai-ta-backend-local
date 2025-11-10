@@ -1,4 +1,4 @@
-Flask==3.1.0
+Flask==3.1.2
 flask-cors==5.0.0
 Flask-Injector==0.15.0
 gunicorn==23.0.0
