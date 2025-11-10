@@ -79,7 +79,7 @@ python-pptx==0.6.23 # PowerPoint
 beautifulsoup4==4.12.2 # HTML parsing
 pysrt==1.1.2 # SRT subtitle files
 Pillow==10.0.0 # Image processing for OCR
-docx2txt==0.8 # Alternative DOCX processing
+docx2txt==0.9 # Alternative DOCX processing
 # Not currently supporting coursera ingest
 # cs-dlp @ git+https://github.com/raffaem/cs-dlp.git@0.12.0b0 # previously called coursera-dl
 
